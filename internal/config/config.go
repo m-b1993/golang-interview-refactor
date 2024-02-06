@@ -1,7 +1,9 @@
 package config
 
 import (
+	"interview/internal/utils"
 	"interview/pkg/log"
+	"path"
 
 	"os"
 
@@ -37,7 +39,9 @@ func Load(file string, logger log.Logger) (*Config, error) {
 	}
 
 	// load from YAML config file
-	bytes, err := os.ReadFile(file)
+	confDir := utils.GetConfigDir()
+	path := path.Join(confDir, file)
+	bytes, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}

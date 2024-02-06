@@ -4,14 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"html/template"
-	"interview/internal/utils"
 	"interview/pkg/db"
 	"interview/pkg/entity"
 	"interview/pkg/log"
-	"path/filepath"
 	"strconv"
-	"strings"
 
 	"gorm.io/gorm"
 )
@@ -20,7 +16,6 @@ type Service interface {
 	AddItemToCart(ctx context.Context, product string, qty int) error
 	DeleteCartItem(ctx context.Context, cartItemIDString string) error
 	GetCartItems(ctx context.Context) []map[string]interface{}
-	RenderTemplate(pageData interface{}) (string, error)
 }
 
 type service struct {
@@ -164,27 +159,4 @@ func (s service) DeleteCartItem(ctx context.Context, cartItemIDString string) er
 
 	db.Delete(&cartItemEntity)
 	return nil
-}
-
-func (s service) RenderTemplate(pageData interface{}) (string, error) {
-	// Read and parse the HTML template file
-	templatesDir := utils.GetTemplatesDir()
-	templatePath := filepath.Join(templatesDir, "add_item_form.html")
-	tmpl, err := template.ParseFiles(templatePath)
-	if err != nil {
-		return "", fmt.Errorf("Error parsing template: %v ", err)
-	}
-
-	// Create a strings.Builder to store the rendered template
-	var renderedTemplate strings.Builder
-
-	err = tmpl.Execute(&renderedTemplate, pageData)
-	if err != nil {
-		return "", fmt.Errorf("Error parsing template: %v ", err)
-	}
-
-	// Convert the rendered template to a string
-	resultString := renderedTemplate.String()
-
-	return resultString, nil
 }

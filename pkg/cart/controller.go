@@ -3,6 +3,7 @@ package cart
 import (
 	"errors"
 	"fmt"
+	"interview/internal/utils"
 	"interview/pkg/log"
 	"strconv"
 
@@ -30,7 +31,7 @@ func (r *resource) showAddItemForm() gin.HandlerFunc {
 			"Error":     c.Query("error"),
 			"CartItems": r.service.GetCartItems(ctx),
 		}
-		html, err := r.service.RenderTemplate(data)
+		html, err := utils.RenderTemplate(data, "add_item_form.html")
 		if err != nil {
 			r.logger.Errorf("Failed to render cart template: %s", err)
 			c.AbortWithStatus(500)

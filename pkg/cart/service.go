@@ -3,7 +3,6 @@ package cart
 import (
 	"context"
 	"errors"
-	"fmt"
 	"interview/pkg/db"
 	"interview/pkg/entity"
 	"interview/pkg/log"
@@ -39,18 +38,22 @@ var itemPriceMapping = map[string]float64{
 }
 
 func (s service) GetCartItems(ctx context.Context) (items []map[string]interface{}) {
-	db := s.db.DB()
-	var cartEntity entity.CartEntity
 	sessionID := ctx.Value("SessionId").(string)
-	result := db.Where(fmt.Sprintf("status = '%s' AND session_id = '%s'", entity.CartOpen, sessionID)).First(&cartEntity)
-
-	if result.Error != nil {
+	conditions := map[string]interface{}{
+		"status":     entity.CartOpen,
+		"session_id": sessionID,
+	}
+	cartEntities, err := s.repo.QueryCart(ctx, conditions, "id desc", 1, 0)
+	if err != nil || len(cartEntities) == 0 {
 		return
 	}
+	cartEntity := cartEntities[0]
 
-	var cartItems []entity.CartItem
-	result = db.Where(fmt.Sprintf("cart_id = %d", cartEntity.ID)).Find(&cartItems)
-	if result.Error != nil {
+	conditions = map[string]interface{}{
+		"cart_id": cartEntity.ID,
+	}
+	cartItems, err := s.repo.QueryCartItem(ctx, conditions, "id desc", 100, 0)
+	if err != nil {
 		return
 	}
 
@@ -70,13 +73,18 @@ func (s service) GetCartItems(ctx context.Context) (items []map[string]interface
 func (s service) AddItemToCart(ctx context.Context, product string, qty int) error {
 	sessionID := ctx.Value("SessionId").(string)
 
-	db := s.db.DB()
 	var isCartNew bool
 	var cartEntity entity.CartEntity
-	result := db.Where(fmt.Sprintf("status = '%s' AND session_id = '%s'", entity.CartOpen, sessionID)).First(&cartEntity)
 
-	if result.Error != nil {
-		if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+	conditions := map[string]interface{}{
+		"status":     entity.CartOpen,
+		"session_id": sessionID,
+	}
+	cartEntities, err := s.repo.QueryCart(ctx, conditions, "id desc", 1, 0)
+
+	if err != nil || len(cartEntities) == 0 {
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			s.logger.Errorf("error querying cart: %v", err)
 			return errors.New("internal error")
 		}
 		isCartNew = true
@@ -84,7 +92,9 @@ func (s service) AddItemToCart(ctx context.Context, product string, qty int) err
 			SessionID: sessionID,
 			Status:    entity.CartOpen,
 		}
-		db.Create(&cartEntity)
+		s.repo.CreateCart(ctx, &cartEntity)
+	} else {
+		cartEntity = cartEntities[0]
 	}
 
 	item, ok := itemPriceMapping[product]
@@ -100,12 +110,16 @@ func (s service) AddItemToCart(ctx context.Context, product string, qty int) err
 			Quantity:    qty,
 			Price:       item * float64(qty),
 		}
-		db.Create(&cartItemEntity)
+		s.repo.CreateCartItem(ctx, &cartItemEntity)
 	} else {
-		result = db.Where(" cart_id = ? and product_name  = ?", cartEntity.ID, product).First(&cartItemEntity)
-
-		if result.Error != nil {
-			if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		conditions = map[string]interface{}{
+			"cart_id":      cartEntity.ID,
+			"product_name": product,
+		}
+		cartItems, err := s.repo.QueryCartItem(ctx, conditions, "id desc", 1, 0)
+		if err != nil || len(cartItems) == 0 {
+			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+				s.logger.Errorf("error querying cart item: %v", err)
 				return errors.New("internal error")
 			}
 			cartItemEntity = entity.CartItem{
@@ -114,12 +128,12 @@ func (s service) AddItemToCart(ctx context.Context, product string, qty int) err
 				Quantity:    qty,
 				Price:       item * float64(qty),
 			}
-			db.Create(&cartItemEntity)
-
+			s.repo.CreateCartItem(ctx, &cartItemEntity)
 		} else {
+			cartItemEntity = cartItems[0]
 			cartItemEntity.Quantity += int(qty)
 			cartItemEntity.Price += item * float64(qty)
-			db.Save(&cartItemEntity)
+			s.repo.UpdateCartItem(ctx, &cartItemEntity)
 		}
 	}
 
@@ -133,11 +147,14 @@ func (s service) DeleteCartItem(ctx context.Context, cartItemIDString string) er
 
 	sessionID := ctx.Value("SessionId").(string)
 
-	db := s.db.DB()
-
 	var cartEntity entity.CartEntity
-	result := db.Where(fmt.Sprintf("status = '%s' AND session_id = '%s'", entity.CartOpen, sessionID)).First(&cartEntity)
-	if result.Error != nil {
+	conditions := map[string]interface{}{
+		"status":     entity.CartOpen,
+		"session_id": sessionID,
+	}
+	cartEntities, err := s.repo.QueryCart(ctx, conditions, "id desc", 1, 0)
+	if err != nil || len(cartEntities) == 0 {
+		s.logger.Errorf("error querying cart: %v", err)
 		return errors.New("internal error")
 	}
 
@@ -152,11 +169,21 @@ func (s service) DeleteCartItem(ctx context.Context, cartItemIDString string) er
 
 	var cartItemEntity entity.CartItem
 
-	result = db.Where(" ID  = ?", cartItemID).First(&cartItemEntity)
-	if result.Error != nil {
+	conditions = map[string]interface{}{
+		"ID": cartItemID,
+	}
+	cartItems, err := s.repo.QueryCartItem(ctx, conditions, "id desc", 1, 0)
+	if err != nil || len(cartItems) == 0 {
+		s.logger.Errorf("error querying cart item: %v", err)
 		return errors.New("internal error")
 	}
 
-	db.Delete(&cartItemEntity)
+	cartItemEntity = cartItems[0]
+	if cartItemEntity.CartID != cartEntity.ID {
+		return errors.New("invalid cart item id")
+	}
+
+	s.repo.DeleteCartItem(ctx, &cartItemEntity)
+
 	return nil
 }

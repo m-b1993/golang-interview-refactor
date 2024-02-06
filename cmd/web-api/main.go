@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"interview/pkg/controllers"
 	"interview/pkg/db"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	"gorm.io/gorm"
 
 	"interview/internal/config"
+	"interview/internal/router"
 	"interview/pkg/log"
 )
 
@@ -55,15 +57,19 @@ func main() {
 	}
 
 	ginEngine := gin.Default()
+	routes := router.New(ginEngine)
+	routes.RegisterHandlers(logger, dbctx)
+
+	address := fmt.Sprintf(":%v", cfg.ServerPort)
+	srv := &http.Server{
+		Addr:    address,
+		Handler: ginEngine,
+	}
 
 	var taxController controllers.TaxController
 	ginEngine.GET("/", taxController.ShowAddItemForm)
 	ginEngine.POST("/add-item", taxController.AddItem)
 	ginEngine.GET("/remove-cart-item", taxController.DeleteCartItem)
-	srv := &http.Server{
-		Addr:    ":8088",
-		Handler: ginEngine,
-	}
 
 	srv.ListenAndServe()
 }

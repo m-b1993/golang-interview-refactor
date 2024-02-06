@@ -17,3 +17,8 @@ func GetConfigDir() string {
 	rootDir := GetRootDir()
 	return filepath.Join(rootDir, "config")
 }
+
+func GetTemplatesDir() string {
+	rootDir := GetRootDir()
+	return filepath.Join(rootDir, "static", "templates")
+}

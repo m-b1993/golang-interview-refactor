@@ -4,9 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"interview/internal/utils"
 	"interview/pkg/db"
 	"interview/pkg/entity"
 	"interview/pkg/log"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -214,7 +216,9 @@ func (s service) getCartItemData(sessionID string) (items []map[string]interface
 
 func (s service) renderTemplate(pageData interface{}) (string, error) {
 	// Read and parse the HTML template file
-	tmpl, err := template.ParseFiles("templates/add_item_form.html")
+	templatesDir := utils.GetTemplatesDir()
+	templatePath := filepath.Join(templatesDir, "add_item_form.html")
+	tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {
 		return "", fmt.Errorf("Error parsing template: %v ", err)
 	}

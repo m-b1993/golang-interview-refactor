@@ -3,6 +3,7 @@ package router
 import (
 	"interview/pkg/db"
 
+	"interview/internal/middlewares"
 	"interview/pkg/cart"
 	"interview/pkg/log"
 
@@ -20,6 +21,7 @@ func New(router *gin.Engine) *routes {
 }
 
 func (r *routes) RegisterHandlers(logger log.Logger, db *db.DB) {
+	r.router.Use(middlewares.SessionMiddleware(logger))
 	cartService := cart.NewService(db, logger)
 	cart.RegisterHandlers(r.router.Group(cart.CartPath), cartService, logger)
 }

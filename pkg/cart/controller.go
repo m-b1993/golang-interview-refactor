@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"interview/pkg/calculator"
 )
 
 func RegisterHandlers(r *gin.RouterGroup, service Service, logger log.Logger) {
@@ -30,7 +29,7 @@ func (r *resource) showAddItemForm() gin.HandlerFunc {
 		if errors.Is(err, http.ErrNoCookie) {
 			ctx.SetCookie("ice_session_id", time.Now().String(), 3600, "/", "localhost", false, true)
 		}
-		calculator.GetCartData(ctx)
+		r.service.GetCartData(ctx)
 	}
 }
 
@@ -43,7 +42,7 @@ func (r *resource) addItem() gin.HandlerFunc {
 			return
 		}
 
-		calculator.AddItemToCart(ctx)
+		r.service.AddItemToCart(ctx)
 	}
 }
 
@@ -56,6 +55,6 @@ func (r *resource) deleteItem() gin.HandlerFunc {
 			return
 		}
 
-		calculator.DeleteCartItem(ctx)
+		r.service.DeleteCartItem(ctx)
 	}
 }

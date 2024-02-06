@@ -37,6 +37,8 @@ func NewService(db *db.DB, logger log.Logger) Service {
 	return service{db, repo, logger}
 }
 
+const CartPath = "/cart"
+
 var itemPriceMapping = map[string]float64{
 	"shoe":  100,
 	"purse": 200,
@@ -81,7 +83,7 @@ func (s service) AddItemToCart(c *gin.Context) {
 
 	if result.Error != nil {
 		if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			c.Redirect(302, "/")
+			c.Redirect(302, CartPath+"?error=internal error")
 			return
 		}
 		isCartNew = true
@@ -94,19 +96,19 @@ func (s service) AddItemToCart(c *gin.Context) {
 
 	addItemForm, err := s.getCartItemForm(c)
 	if err != nil {
-		c.Redirect(302, "/?error="+err.Error())
+		c.Redirect(302, CartPath+"?error="+err.Error())
 		return
 	}
 
 	item, ok := itemPriceMapping[addItemForm.Product]
 	if !ok {
-		c.Redirect(302, "/?error=invalid item name")
+		c.Redirect(302, CartPath+"?error=invalid item name")
 		return
 	}
 
 	quantity, err := strconv.ParseInt(addItemForm.Quantity, 10, 0)
 	if err != nil {
-		c.Redirect(302, "/?error=invalid quantity")
+		c.Redirect(302, CartPath+"?error=invalid quantity")
 		return
 	}
 
@@ -124,7 +126,7 @@ func (s service) AddItemToCart(c *gin.Context) {
 
 		if result.Error != nil {
 			if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
-				c.Redirect(302, "/")
+				c.Redirect(302, CartPath+"?error=internal error")
 				return
 			}
 			cartItemEntity = entity.CartItem{
@@ -142,13 +144,13 @@ func (s service) AddItemToCart(c *gin.Context) {
 		}
 	}
 
-	c.Redirect(302, "/")
+	c.Redirect(302, CartPath)
 }
 
 func (s service) DeleteCartItem(c *gin.Context) {
 	cartItemIDString := c.Query("cart_item_id")
 	if cartItemIDString == "" {
-		c.Redirect(302, "/")
+		c.Redirect(302, CartPath)
 		return
 	}
 
@@ -159,18 +161,18 @@ func (s service) DeleteCartItem(c *gin.Context) {
 	var cartEntity entity.CartEntity
 	result := db.Where(fmt.Sprintf("status = '%s' AND session_id = '%s'", entity.CartOpen, cookie.Value)).First(&cartEntity)
 	if result.Error != nil {
-		c.Redirect(302, "/")
+		c.Redirect(302, CartPath+"?error=internal error")
 		return
 	}
 
 	if cartEntity.Status == entity.CartClosed {
-		c.Redirect(302, "/")
+		c.Redirect(302, CartPath)
 		return
 	}
 
 	cartItemID, err := strconv.Atoi(cartItemIDString)
 	if err != nil {
-		c.Redirect(302, "/")
+		c.Redirect(302, CartPath+"?error=invalid cart item id")
 		return
 	}
 
@@ -178,12 +180,12 @@ func (s service) DeleteCartItem(c *gin.Context) {
 
 	result = db.Where(" ID  = ?", cartItemID).First(&cartItemEntity)
 	if result.Error != nil {
-		c.Redirect(302, "/")
+		c.Redirect(302, CartPath+"?error=internal error")
 		return
 	}
 
 	db.Delete(&cartItemEntity)
-	c.Redirect(302, "/")
+	c.Redirect(302, CartPath)
 }
 
 func (s service) getCartItemData(sessionID string) (items []map[string]interface{}) {

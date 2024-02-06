@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"interview/pkg/controllers"
 	"interview/pkg/db"
 	"net/http"
 	"os"
@@ -66,10 +65,6 @@ func main() {
 		Handler: ginEngine,
 	}
 
-	var taxController controllers.TaxController
-	ginEngine.GET("/", taxController.ShowAddItemForm)
-	ginEngine.POST("/add-item", taxController.AddItem)
-	ginEngine.GET("/remove-cart-item", taxController.DeleteCartItem)
-
+	logger.Infof("server %v is running at %v", Version, address)
 	srv.ListenAndServe()
 }

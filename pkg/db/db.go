@@ -1,10 +1,18 @@
 package db
 
 import (
+	"context"
+
 	"gorm.io/gorm"
 
 	"interview/pkg/entity"
 	"interview/pkg/log"
+)
+
+type contextKey int
+
+const (
+	txKey contextKey = iota
 )
 
 // DB represents a DB connection that can be used to run SQL queries.
@@ -22,6 +30,24 @@ func New(db *gorm.DB, logger log.Logger) *DB {
 // DB returns the db.DB wrapped by this object.
 func (db *DB) DB() *gorm.DB {
 	return db.db
+}
+
+// With returns a Builder that can be used to build and execute SQL queries.
+// With will return the transaction if it is found in the given context.
+// Otherwise it will return a DB connection associated with the context.
+func (db *DB) With(ctx context.Context) *gorm.DB {
+	if tx, ok := ctx.Value(txKey).(*gorm.DB); ok {
+		return tx
+	}
+	return db.db.WithContext(ctx)
+}
+
+// Transactional starts a transaction and calls the given function with a context storing the transaction.
+// The transaction associated with the context can be accesse via With().
+func (db *DB) Transactional(ctx context.Context, f func(ctx context.Context) error) error {
+	return db.db.Transaction(func(tx *gorm.DB) error {
+		return f(context.WithValue(ctx, txKey, tx))
+	})
 }
 
 func (db *DB) MigrateDatabase() error {

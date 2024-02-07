@@ -154,6 +154,7 @@ func (s service) DeleteCartItem(ctx context.Context, cartItemIDString string) er
 		s.logger.Errorf("error querying cart: %v", err)
 		return errors.New("internal error")
 	}
+	cartEntity = cartEntities[0]
 
 	if cartEntity.Status == entity.CartClosed {
 		return nil

@@ -3,7 +3,6 @@ package cart
 import (
 	"context"
 	"errors"
-	"interview/pkg/db"
 	"interview/pkg/entity"
 	"interview/pkg/log"
 	"strconv"
@@ -18,14 +17,12 @@ type Service interface {
 }
 
 type service struct {
-	db     *db.DB
 	repo   Repository
 	logger log.Logger
 }
 
-func NewService(db *db.DB, logger log.Logger) Service {
-	repo := NewRepository(db, logger)
-	return service{db, repo, logger}
+func NewService(repo Repository, logger log.Logger) Service {
+	return service{repo, logger}
 }
 
 const CartPath = "/cart"

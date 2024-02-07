@@ -22,6 +22,7 @@ func New(router *gin.Engine) *routes {
 
 func (r *routes) RegisterHandlers(logger log.Logger, db *db.DB) {
 	r.router.Use(middlewares.SessionMiddleware(logger))
-	cartService := cart.NewService(db, logger)
+	cartRepo := cart.NewRepository(db, logger)
+	cartService := cart.NewService(cartRepo, logger)
 	cart.RegisterHandlers(r.router.Group(cart.CartPath), cartService, logger)
 }

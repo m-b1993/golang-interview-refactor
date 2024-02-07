@@ -15,3 +15,5 @@ example configuration file (`config/debug.yml`):
 ```
 dsn: "<database_user>:<database_password>@tcp(localhost:3306)/<database_name>?parseTime=true"
 ```
+
+For tests you should create a `config/test.yml` file in the same format with the connection information for a mysql test database.

@@ -6,6 +6,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 func GetRootDir() string {
@@ -47,4 +50,13 @@ func RenderTemplate(pageData interface{}, templateName string) (string, error) {
 	resultString := renderedTemplate.String()
 
 	return resultString, nil
+}
+
+func GetDBConnection(dsn string) (*gorm.DB, error) {
+	return gorm.Open(mysql.Open(dsn), &gorm.Config{})
+}
+
+func CloseDBConnection(db *gorm.DB) error {
+	dbInstance, _ := db.DB()
+	return dbInstance.Close()
 }

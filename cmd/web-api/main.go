@@ -8,11 +8,10 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
 
 	"interview/internal/config"
 	"interview/internal/router"
+	"interview/internal/utils"
 	"interview/pkg/log"
 )
 
@@ -35,14 +34,14 @@ func main() {
 	}
 
 	// Open the connection to the database
-	dbConnection, err := gorm.Open(mysql.Open(cfg.DSN), &gorm.Config{})
+	dbConnection, err := utils.GetDBConnection(cfg.DSN)
 	if err != nil {
 		logger.Error(err)
 		os.Exit(-1)
 	}
 	defer func() {
-		dbInstance, _ := dbConnection.DB()
-		if err := dbInstance.Close(); err != nil {
+		err := utils.CloseDBConnection(dbConnection)
+		if err != nil {
 			logger.Error(err)
 		}
 	}()

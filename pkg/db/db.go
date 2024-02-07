@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
 	"interview/pkg/entity"
@@ -48,6 +49,19 @@ func (db *DB) Transactional(ctx context.Context, f func(ctx context.Context) err
 	return db.db.Transaction(func(tx *gorm.DB) error {
 		return f(context.WithValue(ctx, txKey, tx))
 	})
+}
+
+// TransactionHandler returns a middleware that starts a transaction.
+// The transaction started is kept in the context and can be accessed via With().
+func (db *DB) TransactionHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		db.db.Transaction(func(tx *gorm.DB) error {
+			ctx := context.WithValue(c.Request.Context(), txKey, tx)
+			c.Request = c.Request.WithContext(ctx)
+			c.Next()
+			return nil
+		})
+	}
 }
 
 func (db *DB) MigrateDatabase() error {

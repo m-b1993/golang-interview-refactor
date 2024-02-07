@@ -16,7 +16,7 @@ var expected = []map[string]interface{}{
 	{
 		"ID":       uint(1),
 		"Quantity": 3,
-		"Price":    float64(100),
+		"Price":    float64(300),
 		"Product":  "shoe",
 	},
 	{
@@ -46,17 +46,22 @@ func Test_service_AddItemToCart(t *testing.T) {
 	repo := getMockedRepo()
 	service := NewService(&repo, logger)
 	ctx := context.WithValue(context.Background(), "SessionId", sessionID)
-	err := service.AddItemToCart(ctx, "watch", 1)
+
+	qty := 2
+	product := "watch"
+	err := service.AddItemToCart(ctx, product, qty)
 	assert.Nil(t, err)
 	assert.Equal(t, 4, len(repo.items))
 	expected := append(expected, map[string]interface{}{
 		"ID":       uint(4),
-		"Quantity": 1,
-		"Price":    float64(300),
-		"Product":  "watch",
+		"Quantity": qty,
+		"Price":    itemPriceMapping[product] * float64(qty),
+		"Product":  product,
 	})
 	got := service.GetCartItems(ctx)
 	assert.Equal(t, expected, got)
+
+	assert.Equal(t, float64(1100), repo.cards[0].Total)
 }
 
 func Test_service_DeleteCartItem(t *testing.T) {
@@ -78,11 +83,13 @@ func getMockedRepo() mockCartRepo {
 			Model:     gorm.Model{ID: 1},
 			SessionID: sessionID,
 			Status:    entity.CartOpen,
+			Total:     500,
 		},
 		{
 			Model:     gorm.Model{ID: 2},
 			SessionID: "987654321",
 			Status:    entity.CartOpen,
+			Total:     300,
 		},
 	}
 	items := []entity.CartItem{
@@ -91,7 +98,7 @@ func getMockedRepo() mockCartRepo {
 			CartID:      1,
 			ProductName: "shoe",
 			Quantity:    3,
-			Price:       itemPriceMapping["shoe"],
+			Price:       itemPriceMapping["shoe"] * 3,
 		},
 		{
 			Model:       gorm.Model{ID: 2},

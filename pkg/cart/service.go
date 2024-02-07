@@ -97,6 +97,7 @@ func (s service) AddItemToCart(ctx context.Context, product string, qty int) err
 	if !ok {
 		return errors.New("invalid item name")
 	}
+	subTotal := item * float64(qty)
 
 	var cartItemEntity entity.CartItem
 	if isCartNew {
@@ -104,7 +105,7 @@ func (s service) AddItemToCart(ctx context.Context, product string, qty int) err
 			CartID:      cartEntity.ID,
 			ProductName: product,
 			Quantity:    qty,
-			Price:       item * float64(qty),
+			Price:       subTotal,
 		}
 		s.repo.CreateCartItem(ctx, &cartItemEntity)
 	} else {
@@ -122,16 +123,18 @@ func (s service) AddItemToCart(ctx context.Context, product string, qty int) err
 				CartID:      cartEntity.ID,
 				ProductName: product,
 				Quantity:    qty,
-				Price:       item * float64(qty),
+				Price:       subTotal,
 			}
 			s.repo.CreateCartItem(ctx, &cartItemEntity)
 		} else {
 			cartItemEntity = cartItems[0]
 			cartItemEntity.Quantity += int(qty)
-			cartItemEntity.Price += item * float64(qty)
+			cartItemEntity.Price += subTotal
 			s.repo.UpdateCartItem(ctx, &cartItemEntity)
 		}
 	}
+	cartEntity.Total += subTotal
+	s.repo.UpdateCart(ctx, &cartEntity)
 
 	return nil
 }

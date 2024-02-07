@@ -29,7 +29,7 @@ func NewRepository(db *db.DB, logger log.Logger) Repository {
 
 func (r repository) QueryCart(ctx context.Context, conditions map[string]interface{}, order string, limit int, offset int) ([]entity.CartEntity, error) {
 	var cartEntities []entity.CartEntity
-	db := r.db.DB()
+	db := r.db.With(ctx)
 	result := db.Where(conditions).
 		Order(order).
 		Limit(limit).
@@ -43,7 +43,7 @@ func (r repository) QueryCart(ctx context.Context, conditions map[string]interfa
 
 func (r repository) QueryCartItem(ctx context.Context, conditions map[string]interface{}, order string, limit int, offset int) ([]entity.CartItem, error) {
 	var cartItems []entity.CartItem
-	db := r.db.DB()
+	db := r.db.With(ctx)
 	result := db.Where(conditions).
 		Order(order).
 		Limit(limit).
@@ -56,7 +56,7 @@ func (r repository) QueryCartItem(ctx context.Context, conditions map[string]int
 }
 
 func (r repository) CreateCart(ctx context.Context, cartEntity *entity.CartEntity) error {
-	db := r.db.DB()
+	db := r.db.With(ctx)
 	result := db.Create(cartEntity)
 	if result.Error != nil {
 		return result.Error
@@ -65,7 +65,7 @@ func (r repository) CreateCart(ctx context.Context, cartEntity *entity.CartEntit
 }
 
 func (r repository) CreateCartItem(ctx context.Context, cartItem *entity.CartItem) error {
-	db := r.db.DB()
+	db := r.db.With(ctx)
 	result := db.Create(cartItem)
 	if result.Error != nil {
 		return result.Error
@@ -74,7 +74,7 @@ func (r repository) CreateCartItem(ctx context.Context, cartItem *entity.CartIte
 }
 
 func (r repository) UpdateCart(ctx context.Context, cartEntity *entity.CartEntity) error {
-	db := r.db.DB()
+	db := r.db.With(ctx)
 	result := db.Save(cartEntity)
 	if result.Error != nil {
 		return result.Error
@@ -83,7 +83,7 @@ func (r repository) UpdateCart(ctx context.Context, cartEntity *entity.CartEntit
 }
 
 func (r repository) UpdateCartItem(ctx context.Context, cartItem *entity.CartItem) error {
-	db := r.db.DB()
+	db := r.db.With(ctx)
 	result := db.Save(cartItem)
 	if result.Error != nil {
 		return result.Error
@@ -92,7 +92,7 @@ func (r repository) UpdateCartItem(ctx context.Context, cartItem *entity.CartIte
 }
 
 func (r repository) DeleteCart(ctx context.Context, cartEntity *entity.CartEntity) error {
-	db := r.db.DB()
+	db := r.db.With(ctx)
 	result := db.Delete(cartEntity)
 	if result.Error != nil {
 		return result.Error
@@ -101,7 +101,7 @@ func (r repository) DeleteCart(ctx context.Context, cartEntity *entity.CartEntit
 }
 
 func (r repository) DeleteCartItem(ctx context.Context, cartItem *entity.CartItem) error {
-	db := r.db.DB()
+	db := r.db.With(ctx)
 	result := db.Delete(cartItem)
 	if result.Error != nil {
 		return result.Error

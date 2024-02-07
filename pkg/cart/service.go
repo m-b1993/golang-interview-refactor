@@ -5,14 +5,13 @@ import (
 	"errors"
 	"interview/pkg/entity"
 	"interview/pkg/log"
-	"strconv"
 
 	"gorm.io/gorm"
 )
 
 type Service interface {
 	AddItemToCart(ctx context.Context, product string, qty int) error
-	DeleteCartItem(ctx context.Context, cartItemIDString string) error
+	DeleteCartItem(ctx context.Context, cartItemID uint) error
 	GetCartItems(ctx context.Context) []map[string]interface{}
 }
 
@@ -137,11 +136,7 @@ func (s service) AddItemToCart(ctx context.Context, product string, qty int) err
 	return nil
 }
 
-func (s service) DeleteCartItem(ctx context.Context, cartItemIDString string) error {
-	if cartItemIDString == "" {
-		return nil
-	}
-
+func (s service) DeleteCartItem(ctx context.Context, cartItemID uint) error {
 	sessionID := ctx.Value("SessionId").(string)
 
 	var cartEntity entity.CartEntity
@@ -158,11 +153,6 @@ func (s service) DeleteCartItem(ctx context.Context, cartItemIDString string) er
 
 	if cartEntity.Status == entity.CartClosed {
 		return nil
-	}
-
-	cartItemID, err := strconv.Atoi(cartItemIDString)
-	if err != nil {
-		return errors.New("invalid cart item id")
 	}
 
 	var cartItemEntity entity.CartItem

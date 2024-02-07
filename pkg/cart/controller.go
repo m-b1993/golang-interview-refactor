@@ -73,7 +73,12 @@ func (r *resource) deleteItem() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
 		cartItemIDString := c.Query("cart_item_id")
-		err := r.service.DeleteCartItem(ctx, cartItemIDString)
+		cartItemID, err := strconv.Atoi(cartItemIDString)
+		if err != nil {
+			c.Redirect(302, CartPath+"?error="+errors.New("cart item id must be a number").Error())
+			return
+		}
+		err = r.service.DeleteCartItem(ctx, uint(cartItemID))
 		if err != nil {
 			c.Redirect(302, CartPath+"?error="+err.Error())
 			return

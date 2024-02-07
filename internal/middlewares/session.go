@@ -3,9 +3,9 @@ package middlewares
 import (
 	"context"
 	"interview/pkg/log"
-	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 const cookieName = "ice_session_id"
@@ -15,7 +15,7 @@ func SessionMiddleware(logger log.Logger) gin.HandlerFunc {
 		var sessionId string
 		cookie, err := c.Request.Cookie(cookieName)
 		if err != nil {
-			sessionId = time.Now().String()
+			sessionId = uuid.New().String()
 			c.SetCookie(cookieName, sessionId, 3600, "/", "localhost", false, true)
 		} else {
 			sessionId = cookie.Value

@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	defaultServerPort = 8080
+	defaultServerPort = 8088
 )
 
 // Config represents an application configuration.

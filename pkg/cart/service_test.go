@@ -49,7 +49,7 @@ func Test_service_AddItemToCart(t *testing.T) {
 	err := service.AddItemToCart(ctx, "watch", 1)
 	assert.Nil(t, err)
 	assert.Equal(t, 4, len(repo.items))
-	expected = append(expected, map[string]interface{}{
+	expected := append(expected, map[string]interface{}{
 		"ID":       uint(4),
 		"Quantity": 1,
 		"Price":    float64(300),
@@ -67,7 +67,7 @@ func Test_service_DeleteCartItem(t *testing.T) {
 	err := service.DeleteCartItem(ctx, 1)
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(repo.items))
-	expected = expected[1:]
+	expected := expected[1:]
 	got := service.GetCartItems(ctx)
 	assert.Equal(t, expected, got)
 }

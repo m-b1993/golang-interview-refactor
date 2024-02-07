@@ -59,6 +59,9 @@ func (db *DB) TransactionHandler() gin.HandlerFunc {
 			ctx := context.WithValue(c.Request.Context(), txKey, tx)
 			c.Request = c.Request.WithContext(ctx)
 			c.Next()
+			if c.Errors.Errors() != nil {
+				return c.Errors.Last()
+			}
 			return nil
 		})
 	}

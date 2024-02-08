@@ -116,25 +116,15 @@ func (s service) DeleteCartItem(ctx context.Context, cartItemID uint) error {
 		return errors.New("internal error")
 	}
 
-	var cartItemEntity entity.CartItem
 	conditions := map[string]interface{}{
-		"ID": cartItemID,
+		"ID":      cartItemID,
+		"cart_id": cartEntity.ID,
 	}
-	cartItems, err := s.repo.QueryCartItem(ctx, conditions, "id desc", 1, 0)
+	err = s.repo.DeleteCartItem(ctx, conditions)
 	if err != nil {
-		s.logger.Errorf("error querying cart item: %v", err)
+		s.logger.Errorf("error deleting cart item: %v", err)
 		return errors.New("internal error")
 	}
-	if len(cartItems) == 0 {
-		return errors.New("cart item not found")
-	}
-
-	cartItemEntity = cartItems[0]
-	if cartItemEntity.CartID != cartEntity.ID {
-		return errors.New("invalid cart item id")
-	}
-
-	s.repo.DeleteCartItem(ctx, &cartItemEntity)
 
 	return nil
 }

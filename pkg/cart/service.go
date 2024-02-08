@@ -21,6 +21,7 @@ type service struct {
 }
 
 var CartNotFoundError = errors.New("cart not found")
+var InternalError = errors.New("internal error")
 
 func NewService(repo Repository, logger log.Logger) Service {
 	return service{repo, logger}
@@ -92,7 +93,7 @@ func (s service) AddItemToCart(ctx context.Context, product string, qty int) err
 		cartItems, err := s.repo.QueryCartItem(ctx, conditions, "id desc", 1, 0)
 		if err != nil {
 			s.logger.Errorf("error querying cart item: %v", err)
-			return errors.New("internal error")
+			return InternalError
 		}
 		if len(cartItems) == 0 {
 			createItem()
@@ -113,7 +114,7 @@ func (s service) DeleteCartItem(ctx context.Context, cartItemID uint) error {
 	cartEntity, err := s.getCart(ctx)
 	if err != nil {
 		s.logger.Errorf("error getting cart: %v", err)
-		return errors.New("internal error")
+		return InternalError
 	}
 
 	conditions := map[string]interface{}{
@@ -123,7 +124,7 @@ func (s service) DeleteCartItem(ctx context.Context, cartItemID uint) error {
 	err = s.repo.DeleteCartItem(ctx, conditions)
 	if err != nil {
 		s.logger.Errorf("error deleting cart item: %v", err)
-		return errors.New("internal error")
+		return InternalError
 	}
 
 	return nil

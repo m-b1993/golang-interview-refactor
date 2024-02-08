@@ -30,6 +30,7 @@ func (r *resource) showAddItemForm() gin.HandlerFunc {
 		data := map[string]interface{}{
 			"Error":     c.Query("error"),
 			"CartItems": r.service.GetCartItems(ctx),
+			"Products":  r.service.GetProducts(),
 		}
 		html, err := utils.RenderTemplate(data, "add_item_form.html")
 		if err != nil {

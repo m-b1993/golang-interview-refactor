@@ -46,6 +46,10 @@
         padding: 0.5rem;
         width: 90%;
       }
+
+      select#product {
+        text-transform: capitalize;
+      }
     </style>
   </head>
   <body class="bg-white text-gray-900 font-sans p-8">
@@ -60,10 +64,11 @@
         </div>
         <div class="grid-item col-span-2">
           <select class="dropdown-menu" name="product" id="product">
-            <option value="shoe" selected>Shoe</option>
-            <option value="purse">Purse</option>
-            <option value="bag">Bag</option>
-            <option value="watch">Watch</option>
+            {{ range $index, $element := .Products }} {{ if eq $index 0 }}
+            <option value="{{$element}}" selected>{{$element}}</option>
+            {{ else }}
+            <option value="{{$element}}">{{$element}}</option>
+            {{end}} {{end}}
           </select>
         </div>
         <div class="grid-item col-span-9"></div>

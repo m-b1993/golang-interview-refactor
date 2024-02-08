@@ -11,6 +11,7 @@ type Service interface {
 	AddItemToCart(ctx context.Context, product string, qty int) error
 	DeleteCartItem(ctx context.Context, cartItemID uint) error
 	GetCartItems(ctx context.Context) []map[string]interface{}
+	GetProducts() []string
 	getCart(ctx context.Context) (entity.CartEntity, error)
 	getOrCreateCart(ctx context.Context) (entity.CartEntity, bool, error)
 }
@@ -128,6 +129,14 @@ func (s service) DeleteCartItem(ctx context.Context, cartItemID uint) error {
 	}
 
 	return nil
+}
+
+func (s service) GetProducts() []string {
+	var products []string
+	for product := range itemPriceMapping {
+		products = append(products, product)
+	}
+	return products
 }
 
 func (s service) getCart(ctx context.Context) (entity.CartEntity, error) {

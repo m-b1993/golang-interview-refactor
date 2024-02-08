@@ -74,18 +74,19 @@ func (s service) AddItemToCart(ctx context.Context, product string, qty int) err
 	}
 	subTotal := item * float64(qty)
 
-	createItem := func() {
+	createItem := func() error {
 		cartItemEntity := entity.CartItem{
 			CartID:      cartEntity.ID,
 			ProductName: product,
 			Quantity:    qty,
 			Price:       subTotal,
 		}
-		s.repo.CreateCartItem(ctx, &cartItemEntity)
+		return s.repo.CreateCartItem(ctx, &cartItemEntity)
 	}
 
+	err = nil
 	if isCartNew {
-		createItem()
+		err = createItem()
 	} else {
 		conditions := map[string]interface{}{
 			"cart_id":      cartEntity.ID,
@@ -97,16 +98,25 @@ func (s service) AddItemToCart(ctx context.Context, product string, qty int) err
 			return InternalError
 		}
 		if len(cartItems) == 0 {
-			createItem()
+			err = createItem()
 		} else {
 			cartItemEntity := cartItems[0]
 			cartItemEntity.Quantity += qty
 			cartItemEntity.Price += subTotal
-			s.repo.UpdateCartItem(ctx, &cartItemEntity)
+			err = s.repo.UpdateCartItem(ctx, &cartItemEntity)
 		}
 	}
+	if err != nil {
+		s.logger.Errorf("error adding item to cart: %v", err)
+		return InternalError
+	}
+
 	cartEntity.Total += subTotal
-	s.repo.UpdateCart(ctx, &cartEntity)
+	err = s.repo.UpdateCart(ctx, &cartEntity)
+	if err != nil {
+		s.logger.Errorf("error updating cart: %v", err)
+		return InternalError
+	}
 
 	return nil
 }

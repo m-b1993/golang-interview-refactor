@@ -14,8 +14,10 @@ type Repository interface {
 	CreateCartItem(ctx context.Context, cartItem *entity.CartItem) error
 	UpdateCart(ctx context.Context, cartEntity *entity.CartEntity) error
 	UpdateCartItem(ctx context.Context, cartItem *entity.CartItem) error
-	DeleteCart(ctx context.Context, cartEntity *entity.CartEntity) error
-	DeleteCartItem(ctx context.Context, cartItem *entity.CartItem) error
+	DeleteCartById(ctx context.Context, id uint) error
+	DeleteCartItemById(ctx context.Context, id uint) error
+	DeleteCart(ctx context.Context, conditions map[string]interface{}) error
+	DeleteCartItem(ctx context.Context, conditions map[string]interface{}) error
 }
 
 type repository struct {
@@ -91,18 +93,36 @@ func (r repository) UpdateCartItem(ctx context.Context, cartItem *entity.CartIte
 	return nil
 }
 
-func (r repository) DeleteCart(ctx context.Context, cartEntity *entity.CartEntity) error {
+func (r repository) DeleteCartById(ctx context.Context, id uint) error {
 	db := r.db.With(ctx)
-	result := db.Delete(cartEntity)
+	result := db.Delete(&entity.CartEntity{}, id)
 	if result.Error != nil {
 		return result.Error
 	}
 	return nil
 }
 
-func (r repository) DeleteCartItem(ctx context.Context, cartItem *entity.CartItem) error {
+func (r repository) DeleteCartItemById(ctx context.Context, id uint) error {
 	db := r.db.With(ctx)
-	result := db.Delete(cartItem)
+	result := db.Delete(&entity.CartItem{}, id)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
+func (r repository) DeleteCart(ctx context.Context, conditions map[string]interface{}) error {
+	db := r.db.With(ctx)
+	result := db.Where(conditions).Delete(&entity.CartEntity{})
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
+func (r repository) DeleteCartItem(ctx context.Context, conditions map[string]interface{}) error {
+	db := r.db.With(ctx)
+	result := db.Where(conditions).Delete(&entity.CartItem{})
 	if result.Error != nil {
 		return result.Error
 	}

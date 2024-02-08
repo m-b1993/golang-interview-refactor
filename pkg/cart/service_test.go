@@ -192,18 +192,59 @@ func (m *mockCartRepo) UpdateCartItem(ctx context.Context, cartItem *entity.Cart
 	return nil
 }
 
-func (m *mockCartRepo) DeleteCart(ctx context.Context, cartEntity *entity.CartEntity) error {
+func (m *mockCartRepo) DeleteCartById(ctx context.Context, id uint) error {
 	for i, c := range m.cards {
-		if c.ID == cartEntity.ID {
+		if c.ID == id {
 			m.cards = append(m.cards[:i], m.cards[i+1:]...)
 		}
 	}
 	return nil
 }
-func (m *mockCartRepo) DeleteCartItem(ctx context.Context, cartItem *entity.CartItem) error {
+
+func (m *mockCartRepo) DeleteCartItemById(ctx context.Context, id uint) error {
 	for i, c := range m.items {
-		if c.ID == cartItem.ID {
+		if c.ID == id {
 			m.items = append(m.items[:i], m.items[i+1:]...)
+		}
+	}
+	return nil
+}
+
+func (m *mockCartRepo) DeleteCart(ctx context.Context, conditions map[string]interface{}) error {
+	for k, v := range conditions {
+		if k == "id" {
+			for i, c := range m.cards {
+				if c.ID == v.(uint) {
+					m.cards = append(m.cards[:i], m.cards[i+1:]...)
+				}
+			}
+		}
+		if k == "status" {
+			for i, c := range m.cards {
+				if c.Status == v.(entity.Status) {
+					m.cards = append(m.cards[:i], m.cards[i+1:]...)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (m *mockCartRepo) DeleteCartItem(ctx context.Context, conditions map[string]interface{}) error {
+	for k, v := range conditions {
+		if k == "id" {
+			for i, c := range m.items {
+				if c.ID == v.(uint) {
+					m.items = append(m.items[:i], m.items[i+1:]...)
+				}
+			}
+		}
+		if k == "cart_id" {
+			for i, c := range m.items {
+				if c.CartID == v.(uint) {
+					m.items = append(m.items[:i], m.items[i+1:]...)
+				}
+			}
 		}
 	}
 	return nil
